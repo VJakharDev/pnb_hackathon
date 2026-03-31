@@ -6,6 +6,25 @@ Real-time TLS cryptographic assessment platform — CBOM generation, PQC readine
 
 ---
 
+## Screenshots
+
+### Dashboard — Landing Page
+![Landing page](screenshots/01_landing.png)
+
+### Risk Score & HNDL Alert (live scan of google.com)
+![Risk score and metrics](screenshots/02_risk_score.png)
+
+### Cryptographic Bill of Materials (CBOM)
+![CBOM table](screenshots/03_cbom.png)
+
+### CRQC Attack Simulation — Shor's & Grover's
+![CRQC simulation](screenshots/04_crqc.png)
+
+### Migration Recommendations & Roadmap
+![Migration roadmap](screenshots/05_migration.png)
+
+---
+
 ## Setup Instructions
 
 ### Prerequisites

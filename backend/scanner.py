@@ -8,6 +8,7 @@ Uses Python ssl + socket + cryptography for live handshake analysis.
 """
 
 import ssl
+import time
 import socket
 import datetime
 from typing import Any
@@ -462,6 +463,8 @@ def full_scan(domain: str) -> dict[str, Any]:
     Orchestrate a complete scan: TLS handshake → CBOM → risk score → migration.
     Returns data in the exact shape expected by the frontend render() function.
     """
+    scan_start = time.time()
+
     # Step 1: TLS scan
     raw = scan_tls(domain)
 
@@ -492,6 +495,9 @@ def full_scan(domain: str) -> dict[str, Any]:
     # Step 6: Migration recommendations
     mig, phases = generate_migration(algos, parts, raw["tls_version"], score)
 
+    scan_duration = round(time.time() - scan_start, 2)
+    scan_ts = datetime.datetime.now(datetime.timezone.utc)
+
     return {
         "host": raw["domain"],
         "ip": raw["ip"],
@@ -516,8 +522,19 @@ def full_scan(domain: str) -> dict[str, Any]:
         "labelTxt": label_txt,
         "mig": mig,
         "phases": phases,
-        # Bonus: raw scan evidence for transparency
-        "raw_evidence": {
+        # Scan evidence for transparency
+        "scan_evidence": {
+            "steps": [
+                "TLS detected via OpenSSL handshake",
+                "Cipher suites enumerated via SSL scanner",
+                "Certificate parsed via X509 module",
+                "CBOM assembled from scan artifacts",
+                "Risk calculated via PQC evaluation engine",
+                "Migration plan generated from NIST PQC registry",
+            ],
+            "scan_timestamp": scan_ts.strftime("%Y-%m-%d %H:%M UTC"),
+            "scan_duration": f"{scan_duration} seconds",
+            "scanner_engine": "Python ssl + socket + cryptography",
             "cipher_suite_full": raw["cipher_suite"],
             "cipher_bits": raw["cipher_bits"],
             "key_type": raw["key_type"],
@@ -525,7 +542,6 @@ def full_scan(domain: str) -> dict[str, Any]:
             "subject_dn": raw["subject"],
             "issuer_dn": raw["issuer"],
             "expiry_utc": raw["expiry"],
-            "scan_timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         },
     }
 

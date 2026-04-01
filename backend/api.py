@@ -5,9 +5,10 @@ Exposes a /scan endpoint that performs live TLS scanning
 and returns structured results for the frontend dashboard.
 """
 
+from pathlib import Path
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 import scanner
 
 app = FastAPI(
@@ -24,6 +25,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Resolve project root (one level up from backend/)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+@app.get("/")
+async def serve_frontend():
+    """Serve the main dashboard HTML."""
+    return FileResponse(PROJECT_ROOT / "pnb_ui.html", media_type="text/html")
 
 
 @app.get("/scan")

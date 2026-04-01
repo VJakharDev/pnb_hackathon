@@ -1,761 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantum-Proof Systems Scanner — PQC Readiness Assessment</title>
+<meta name="description" content="Real-time TLS cryptographic assessment, CBOM generation, PQC readiness scoring, and quantum risk analysis">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0
-  }
-
-  body {
-    font-family: var(--font-sans);
-    background: transparent
-  }
-
-  .app {
-    padding: 1rem 0;
-    max-width: 980px;
-    margin: 0 auto
-  }
-
-  .topbar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
-    border-bottom: 0.5px solid var(--color-border-tertiary)
-  }
-
-  .logo {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    background: #C0392B;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0
-  }
-
-  .logo svg {
-    width: 18px;
-    height: 18px
-  }
-
-  .topbar h1 {
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--color-text-primary)
-  }
-
-  .topbar p {
-    font-size: 11px;
-    color: var(--color-text-secondary);
-    margin-top: 1px
-  }
-
-  .scanrow {
-    display: flex;
-    gap: 8px;
-    margin-bottom: .75rem
-  }
-
-  .scanrow input {
-    flex: 1;
-    padding: 8px 12px;
-    border: 0.5px solid var(--color-border-secondary);
-    border-radius: var(--border-radius-md);
-    font-size: 13px;
-    background: var(--color-background-primary);
-    color: var(--color-text-primary);
-    outline: none
-  }
-
-  .scanrow input:focus {
-    border-color: #C0392B;
-    box-shadow: 0 0 0 2px rgba(192, 57, 43, .12)
-  }
-
-  .scanbtn {
-    padding: 8px 18px;
-    background: #C0392B;
-    color: #fff;
-    border: none;
-    border-radius: var(--border-radius-md);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap
-  }
-
-  .scanbtn:hover {
-    opacity: .88
-  }
-
-  .scanbtn:disabled {
-    opacity: .4;
-    cursor: not-allowed
-  }
-
-  .presets {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 1rem;
-    align-items: center
-  }
-
-  .presets span {
-    font-size: 11px;
-    color: var(--color-text-secondary)
-  }
-
-  .pbtn {
-    padding: 3px 10px;
-    font-size: 12px;
-    border: 0.5px solid var(--color-border-secondary);
-    border-radius: 20px;
-    background: var(--color-background-secondary);
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    transition: all .12s
-  }
-
-  .pbtn:hover {
-    border-color: #C0392B;
-    color: #C0392B
-  }
-
-  .pbar-wrap {
-    height: 3px;
-    background: var(--color-border-tertiary);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-bottom: 6px;
-    display: none
-  }
-
-  .pbar-fill {
-    height: 100%;
-    background: #C0392B;
-    border-radius: 2px;
-    width: 0;
-    transition: width .32s ease
-  }
-
-  .plabel {
-    font-size: 12px;
-    color: var(--color-text-secondary);
-    margin-bottom: 1rem;
-    min-height: 16px;
-    display: none
-  }
-
-  .empty {
-    text-align: center;
-    padding: 2.5rem 1rem;
-    color: var(--color-text-secondary);
-    font-size: 13px
-  }
-
-  .results {
-    display: none
-  }
-
-  .metrics {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    margin-bottom: .85rem
-  }
-
-  .mc {
-    background: var(--color-background-secondary);
-    border-radius: var(--border-radius-md);
-    padding: .75rem 1rem
-  }
-
-  .mc-lbl {
-    font-size: 11px;
-    color: var(--color-text-secondary);
-    margin-bottom: 3px
-  }
-
-  .mc-val {
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--color-text-primary)
-  }
-
-  .mc-val.r {
-    color: #A32D2D
-  }
-
-  .mc-val.a {
-    color: #854F0B
-  }
-
-  .mc-val.g {
-    color: #1E8449
-  }
-
-  .mc-sub {
-    font-size: 11px;
-    color: var(--color-text-secondary);
-    margin-top: 2px
-  }
-
-  .gauge-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 4px
-  }
-
-  .gauge {
-    position: relative;
-    width: 72px;
-    height: 72px;
-    flex-shrink: 0
-  }
-
-  .gauge svg {
-    width: 72px;
-    height: 72px;
-    transform: rotate(-90deg)
-  }
-
-  .gnum {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center
-  }
-
-  .gnum-n {
-    font-size: 18px;
-    font-weight: 500;
-    line-height: 1
-  }
-
-  .gnum-l {
-    font-size: 9px;
-    color: var(--color-text-secondary)
-  }
-
-  .card {
-    background: var(--color-background-primary);
-    border: 0.5px solid var(--color-border-tertiary);
-    border-radius: var(--border-radius-lg);
-    padding: 1rem 1.25rem;
-    margin-bottom: .85rem
-  }
-
-  .ctitle {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--color-text-primary);
-    margin-bottom: .85rem;
-    display: flex;
-    align-items: center;
-    gap: 7px
-  }
-
-  .dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0
-  }
-
-  .dot.r {
-    background: #C0392B
-  }
-
-  .dot.a {
-    background: #D68910
-  }
-
-  .dot.g {
-    background: #1E8449
-  }
-
-  .dot.b {
-    background: #1F618D
-  }
-
-  .dot.p {
-    background: #6C3483
-  }
-
-  .tbl {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12.5px
-  }
-
-  .tbl th {
-    text-align: left;
-    padding: 5px 8px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    border-bottom: 0.5px solid var(--color-border-tertiary)
-  }
-
-  .tbl td {
-    padding: 6px 8px;
-    border-bottom: 0.5px solid var(--color-border-tertiary);
-    color: var(--color-text-primary);
-    vertical-align: middle
-  }
-
-  .tbl tr:last-child td {
-    border-bottom: none
-  }
-
-  .bx {
-    display: inline-block;
-    padding: 2px 7px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500
-  }
-
-  .bx.r {
-    background: #FDECEA;
-    color: #A32D2D
-  }
-
-  .bx.a {
-    background: #FFF3CD;
-    color: #854F0B
-  }
-
-  .bx.g {
-    background: #EAF3DE;
-    color: #3B6D11
-  }
-
-  .bx.b {
-    background: #E6F1FB;
-    color: #185FA5
-  }
-
-  .bx.gr {
-    background: var(--color-background-secondary);
-    color: var(--color-text-secondary)
-  }
-
-  .srow {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 0;
-    border-bottom: 0.5px solid var(--color-border-tertiary);
-    font-size: 12.5px
-  }
-
-  .srow:last-child {
-    border-bottom: none
-  }
-
-  .srow-f {
-    flex: 1;
-    color: var(--color-text-primary)
-  }
-
-  .sbar-bg {
-    width: 80px;
-    height: 5px;
-    background: var(--color-border-tertiary);
-    border-radius: 3px;
-    overflow: hidden;
-    flex-shrink: 0
-  }
-
-  .sbar-fg {
-    height: 100%;
-    border-radius: 3px
-  }
-
-  .simp {
-    padding: 1px 7px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap
-  }
-
-  .hndl-bar {
-    background: #FDECEA;
-    border: 0.5px solid #C0392B;
-    border-radius: var(--border-radius-md);
-    padding: .6rem 1rem;
-    font-size: 12.5px;
-    color: #791F1F;
-    margin-bottom: .85rem;
-    display: flex;
-    gap: 8px;
-    line-height: 1.5
-  }
-
-  .ctabs {
-    display: flex;
-    border: 0.5px solid var(--color-border-secondary);
-    border-radius: var(--border-radius-md);
-    overflow: hidden;
-    width: fit-content;
-    margin-bottom: .85rem
-  }
-
-  .ctab {
-    padding: 5px 13px;
-    font-size: 12px;
-    cursor: pointer;
-    background: var(--color-background-primary);
-    color: var(--color-text-secondary);
-    border: none;
-    border-right: 0.5px solid var(--color-border-secondary);
-    transition: all .12s
-  }
-
-  .ctab:last-child {
-    border-right: none
-  }
-
-  .ctab.on {
-    background: #C0392B;
-    color: #fff
-  }
-
-  .crqc-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
-    margin-bottom: .85rem
-  }
-
-  .arow {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 7px 0;
-    border-bottom: 0.5px solid var(--color-border-tertiary)
-  }
-
-  .arow:last-child {
-    border-bottom: none
-  }
-
-  .aicon {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    flex-shrink: 0;
-    margin-top: 1px
-  }
-
-  .aicon.broken {
-    background: #FDECEA;
-    color: #A32D2D
-  }
-
-  .aicon.weak {
-    background: #FFF3CD;
-    color: #854F0B
-  }
-
-  .aicon.safe {
-    background: #EAF3DE;
-    color: #3B6D11
-  }
-
-  .aname {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--color-text-primary);
-    line-height: 1.3
-  }
-
-  .anote {
-    font-size: 11px;
-    color: var(--color-text-secondary);
-    margin-top: 2px;
-    line-height: 1.4
-  }
-
-  .crqc-verdict {
-    border-radius: var(--border-radius-md);
-    padding: .75rem 1rem;
-    font-size: 12.5px;
-    border-left: 3px solid;
-    line-height: 1.5
-  }
-
-  .crqc-verdict.threat {
-    background: #FDECEA;
-    border-color: #C0392B;
-    color: #791F1F
-  }
-
-  .crqc-verdict.partial {
-    background: #FFF3CD;
-    border-color: #D68910;
-    color: #633806
-  }
-
-  .crqc-verdict.safe {
-    background: #EAF3DE;
-    border-color: #1E8449;
-    color: #27500A
-  }
-
-  .tline {
-    display: flex;
-    position: relative;
-    margin-bottom: 1rem
-  }
-
-  .tline::before {
-    content: '';
-    position: absolute;
-    top: 11px;
-    left: 11px;
-    right: 11px;
-    height: 2px;
-    background: var(--color-border-tertiary);
-    z-index: 0
-  }
-
-  .tnode {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    position: relative;
-    z-index: 1
-  }
-
-  .tcirc {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700
-  }
-
-  .tcirc.done {
-    background: #C0392B;
-    color: #fff
-  }
-
-  .tcirc.warn {
-    background: #D68910;
-    color: #fff
-  }
-
-  .tcirc.ok {
-    background: #1E8449;
-    color: #fff
-  }
-
-  .tcirc.dim {
-    background: var(--color-background-secondary);
-    color: var(--color-text-secondary);
-    border: 0.5px solid var(--color-border-secondary)
-  }
-
-  .tlbl {
-    font-size: 10px;
-    color: var(--color-text-secondary);
-    text-align: center;
-    line-height: 1.3
-  }
-
-  /* migration table */
-  .mig-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12.5px
-  }
-
-  .mig-table th {
-    text-align: left;
-    padding: 6px 10px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    border-bottom: 0.5px solid var(--color-border-tertiary);
-    background: var(--color-background-secondary)
-  }
-
-  .mig-table td {
-    padding: 8px 10px;
-    border-bottom: 0.5px solid var(--color-border-tertiary);
-    color: var(--color-text-primary);
-    vertical-align: top;
-    line-height: 1.4
-  }
-
-  .mig-table tr:last-child td {
-    border-bottom: none
-  }
-
-  .mig-table tr:hover td {
-    background: var(--color-background-secondary)
-  }
-
-  .pri {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500
-  }
-
-  .pri.crit {
-    background: #FDECEA;
-    color: #A32D2D
-  }
-
-  .pri.high {
-    background: #FFF3CD;
-    color: #854F0B
-  }
-
-  .pri.med {
-    background: #E6F1FB;
-    color: #185FA5
-  }
-
-  .pri.low {
-    background: #EAF3DE;
-    color: #3B6D11
-  }
-
-  .effort {
-    display: inline-block;
-    padding: 2px 7px;
-    border-radius: 20px;
-    font-size: 11px;
-    background: var(--color-background-secondary);
-    color: var(--color-text-secondary)
-  }
-
-  .arrow-cell {
-    font-size: 11px;
-    color: var(--color-text-secondary)
-  }
-
-  .arrow-cell s {
-    color: #A32D2D;
-    text-decoration: line-through
-  }
-
-  .arrow-cell strong {
-    color: #1E8449
-  }
-
-  .mig-summary {
-    display: flex;
-    gap: 8px;
-    margin-bottom: .85rem;
-    flex-wrap: wrap
-  }
-
-  .lbl-strip {
-    display: flex;
-    gap: 7px;
-    flex-wrap: wrap;
-    margin-top: .85rem
-  }
-
-  .lbl {
-    padding: 5px 13px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    border: 1.5px solid
-  }
-
-  .lbl.r {
-    background: #FDECEA;
-    color: #A32D2D;
-    border-color: #C0392B
-  }
-
-  .lbl.a {
-    background: #FFF3CD;
-    color: #854F0B;
-    border-color: #D68910
-  }
-
-  .lbl.g {
-    background: #EAF3DE;
-    color: #3B6D11;
-    border-color: #1E8449
-  }
-
-  .lbl.b {
-    background: #E6F1FB;
-    color: #185FA5;
-    border-color: #1F618D
-  }
-
-  .roadmap {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: .85rem;
-    margin-top: .85rem
-  }
-
-  .rmap-card {
-    border-radius: var(--border-radius-md);
-    padding: .75rem;
-    border: 0.5px solid var(--color-border-tertiary)
-  }
-
-  .rmap-phase {
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    margin-bottom: .4rem
-  }
-
-  .rmap-title {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--color-text-primary);
-    margin-bottom: .4rem
-  }
-
-  .rmap-items {
-    font-size: 11.5px;
-    color: var(--color-text-secondary);
-    line-height: 1.7
-  }
+:root {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-card: #151d2e;
+  --bg-elevated: #1a2332;
+  --border: #1e2d3d;
+  --border-light: #243447;
+  --text-primary: #e2e8f0;
+  --text-secondary: #8896a8;
+  --text-muted: #5a6b7e;
+  --accent: #ef4444;
+  --accent-glow: rgba(239,68,68,.15);
+  --green: #22c55e;
+  --green-bg: rgba(34,197,94,.12);
+  --green-text: #4ade80;
+  --amber: #f59e0b;
+  --amber-bg: rgba(245,158,11,.12);
+  --amber-text: #fbbf24;
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,.1);
+  --red-text: #f87171;
+  --blue: #3b82f6;
+  --blue-bg: rgba(59,130,246,.1);
+  --blue-text: #60a5fa;
+  --purple: #a855f7;
+  --purple-bg: rgba(168,85,247,.1);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-pill: 100px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);min-height:100vh}
+
+/* Animated background */
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(239,68,68,.08),transparent),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(59,130,246,.05),transparent);pointer-events:none;z-index:0}
+
+.app{position:relative;z-index:1;padding:2rem 1.5rem;max-width:1040px;margin:0 auto}
+
+/* ── Topbar ── */
+.topbar{display:flex;align-items:center;gap:16px;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.logo{width:44px;height:44px;border-radius:var(--radius);background:linear-gradient(135deg,#ef4444,#dc2626);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 20px rgba(239,68,68,.3)}
+.logo svg{width:22px;height:22px}
+.topbar h1{font-size:18px;font-weight:600;color:#fff;letter-spacing:-.02em}
+.topbar p{font-size:12px;color:var(--text-secondary);margin-top:3px;letter-spacing:.02em}
+
+/* ── Scan input ── */
+.scanrow{display:flex;gap:10px;margin-bottom:1rem}
+.scanrow input{flex:1;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:var(--font);background:var(--bg-secondary);color:var(--text-primary);outline:none;transition:all .2s}
+.scanrow input::placeholder{color:var(--text-muted)}
+.scanrow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow),0 0 20px var(--accent-glow)}
+.scanbtn{padding:12px 24px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;white-space:nowrap;transition:all .2s;box-shadow:0 2px 10px rgba(239,68,68,.25)}
+.scanbtn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(239,68,68,.4)}
+.scanbtn:active{transform:translateY(0)}
+.scanbtn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ── Presets ── */
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center}
+.presets span{font-size:12px;color:var(--text-muted);font-weight:500}
+.pbtn{padding:6px 14px;font-size:13px;font-family:var(--font);border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--bg-secondary);color:var(--text-secondary);cursor:pointer;transition:all .2s}
+.pbtn:hover{border-color:var(--accent);color:var(--red-text);background:var(--red-bg)}
+
+/* ── Progress ── */
+.pbar-wrap{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:8px;display:none}
+.pbar-fill{height:100%;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:2px;width:0;transition:width .4s ease}
+.plabel{font-size:13px;color:var(--text-secondary);margin-bottom:1.5rem;min-height:18px;display:none}
+
+/* ── Empty state ── */
+.empty{text-align:center;padding:4rem 1rem;color:var(--text-muted);font-size:14px}
+.results{display:none}
+
+/* ── Metric cards ── */
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1rem}
+@media(max-width:768px){.metrics{grid-template-columns:repeat(2,1fr)}}
+.mc{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.15rem;transition:border-color .2s}
+.mc:hover{border-color:var(--border-light)}
+.mc-lbl{font-size:11px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.mc-val{font-size:22px;font-weight:600;color:var(--text-primary)}
+.mc-val.r{color:var(--red-text)}.mc-val.a{color:var(--amber-text)}.mc-val.g{color:var(--green-text)}
+.mc-sub{font-size:11px;color:var(--text-secondary);margin-top:4px}
+
+/* ── Gauge ── */
+.gauge-wrap{display:flex;align-items:center;gap:12px;margin-top:6px}
+.gauge{position:relative;width:72px;height:72px;flex-shrink:0}
+.gauge svg{width:72px;height:72px;transform:rotate(-90deg)}
+.gnum{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.gnum-n{font-size:20px;font-weight:700;line-height:1}
+.gnum-l{font-size:9px;color:var(--text-muted);margin-top:2px}
+
+/* ── Cards ── */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1rem;transition:border-color .2s}
+.card:hover{border-color:var(--border-light)}
+.ctitle{font-size:14px;font-weight:600;color:#fff;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.r{background:var(--red)}.dot.a{background:var(--amber)}.dot.g{background:var(--green)}.dot.b{background:var(--blue)}.dot.p{background:var(--purple)}
+
+/* ── Tables ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:8px 10px;font-size:11px;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.04em}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bg-elevated)}
+
+/* ── Badges ── */
+.bx{display:inline-block;padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:600;letter-spacing:.02em}
+.bx.r{background:var(--red-bg);color:var(--red-text)}
+.bx.a{background:var(--amber-bg);color:var(--amber-text)}
+.bx.g{background:var(--green-bg);color:var(--green-text)}
+.bx.b{background:var(--blue-bg);color:var(--blue-text)}
+.bx.gr{background:rgba(255,255,255,.06);color:var(--text-secondary)}
+
+/* ── Score rows ── */
+.srow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.srow:last-child{border-bottom:none}
+.srow-f{flex:1;color:var(--text-primary)}
+.sbar-bg{width:80px;height:4px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0}
+.sbar-fg{height:100%;border-radius:3px}
+.simp{padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:600;white-space:nowrap}
+
+/* ── HNDL alert ── */
+.hndl-bar{background:var(--red-bg);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius);padding:.85rem 1.15rem;font-size:13px;color:var(--red-text);margin-bottom:1rem;display:flex;gap:10px;line-height:1.6}
+
+/* ── CRQC tabs ── */
+.ctabs{display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;width:fit-content;margin-bottom:1rem}
+.ctab{padding:8px 16px;font-size:13px;font-family:var(--font);cursor:pointer;background:var(--bg-secondary);color:var(--text-secondary);border:none;border-right:1px solid var(--border);transition:all .15s}
+.ctab:last-child{border-right:none}
+.ctab:hover{color:var(--text-primary)}
+.ctab.on{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.crqc-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1rem}
+
+/* ── Algorithm rows ── */
+.arow{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.arow:last-child{border-bottom:none}
+.aicon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.aicon.broken{background:var(--red-bg);color:var(--red-text)}
+.aicon.weak{background:var(--amber-bg);color:var(--amber-text)}
+.aicon.safe{background:var(--green-bg);color:var(--green-text)}
+.aname{font-size:13px;font-weight:500;color:var(--text-primary);line-height:1.4}
+.anote{font-size:11.5px;color:var(--text-secondary);margin-top:3px;line-height:1.5}
+
+/* ── CRQC verdict ── */
+.crqc-verdict{border-radius:var(--radius-sm);padding:1rem 1.15rem;font-size:13px;border-left:3px solid;line-height:1.6}
+.crqc-verdict.threat{background:var(--red-bg);border-color:var(--red);color:var(--red-text)}
+.crqc-verdict.partial{background:var(--amber-bg);border-color:var(--amber);color:var(--amber-text)}
+.crqc-verdict.safe{background:var(--green-bg);border-color:var(--green);color:var(--green-text)}
+
+/* ── Timeline ── */
+.tline{display:flex;position:relative;margin-bottom:1.25rem}
+.tline::before{content:'';position:absolute;top:12px;left:12px;right:12px;height:2px;background:var(--border);z-index:0}
+.tnode{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;z-index:1}
+.tcirc{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.tcirc.done{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.3)}
+.tcirc.warn{background:var(--amber);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.3)}
+.tcirc.ok{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(34,197,94,.3)}
+.tcirc.dim{background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border)}
+.tlbl{font-size:10px;color:var(--text-muted);text-align:center;line-height:1.3}
+
+/* ── Migration table ── */
+.mig-table{width:100%;border-collapse:collapse;font-size:13px}
+.mig-table th{text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.04em;background:var(--bg-elevated)}
+.mig-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:top;line-height:1.5}
+.mig-table tr:last-child td{border-bottom:none}
+.mig-table tr:hover td{background:var(--bg-elevated)}
+.pri{display:inline-block;padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:600}
+.pri.crit{background:var(--red-bg);color:var(--red-text)}
+.pri.high{background:var(--amber-bg);color:var(--amber-text)}
+.pri.med{background:var(--blue-bg);color:var(--blue-text)}
+.pri.low{background:var(--green-bg);color:var(--green-text)}
+.effort{display:inline-block;padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:500;background:rgba(255,255,255,.06);color:var(--text-secondary)}
+.arrow-cell{font-size:12px;color:var(--text-secondary)}
+.arrow-cell s{color:var(--red-text);text-decoration:line-through}
+.arrow-cell strong{color:var(--green-text)}
+.mig-summary{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+
+/* ── Labels ── */
+.lbl-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:1rem}
+.lbl{padding:6px 16px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;border:1.5px solid}
+.lbl.r{background:var(--red-bg);color:var(--red-text);border-color:rgba(239,68,68,.4)}
+.lbl.a{background:var(--amber-bg);color:var(--amber-text);border-color:rgba(245,158,11,.4)}
+.lbl.g{background:var(--green-bg);color:var(--green-text);border-color:rgba(34,197,94,.4)}
+.lbl.b{background:var(--blue-bg);color:var(--blue-text);border-color:rgba(59,130,246,.4)}
+
+/* ── Roadmap ── */
+.roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1rem}
+@media(max-width:768px){.roadmap{grid-template-columns:1fr}}
+.rmap-card{border-radius:var(--radius-sm);padding:1rem;border:1px solid var(--border);background:var(--bg-elevated);transition:border-color .2s}
+.rmap-card:hover{border-color:var(--border-light)}
+.rmap-phase{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+.rmap-items{font-size:12px;color:var(--text-secondary);line-height:1.8}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.results{animation:fadeUp .4s ease}
+.card{animation:fadeUp .35s ease both}
+.card:nth-child(2){animation-delay:.05s}.card:nth-child(3){animation-delay:.1s}.card:nth-child(4){animation-delay:.15s}.card:nth-child(5){animation-delay:.2s}
 </style>
-
+</head>
+<body>
 <div class="app">
   <div class="topbar">
     <div class="logo">
       <svg viewBox="0 0 20 20" fill="none" stroke="white" stroke-width="1.6">
-        <circle cx="10" cy="10" r="7" />
-        <path d="M10 6v4l2.5 2.5" />
-        <path d="M5.5 10h1.5M13 10h1.5M10 5.5v1.5M10 13v1.5" />
+        <circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5"/><path d="M5.5 10h1.5M13 10h1.5M10 5.5v1.5M10 13v1.5"/>
       </svg>
     </div>
     <div>
@@ -777,163 +234,113 @@
     <button class="pbtn" data-target="icicibank.com">icicibank.com</button>
   </div>
 
-  <div class="pbar-wrap" id="pbw">
-    <div class="pbar-fill" id="pbf"></div>
-  </div>
+  <div class="pbar-wrap" id="pbw"><div class="pbar-fill" id="pbf"></div></div>
   <div class="plabel" id="pbl"></div>
   <div class="empty" id="em">Enter a domain and hit Scan, or click a quick preset above.</div>
   <div class="results" id="res"></div>
 </div>
 
 <script>
-  const API_BASE = 'http://localhost:8000';
-  let crqcMode = 'arrived', cur = null;
+const API_BASE = 'http://localhost:8000';
+let crqcMode='arrived', cur=null;
 
-  function runScan(target) {
-    document.getElementById('em').style.display = 'none';
-    document.getElementById('res').style.display = 'none';
-    document.getElementById('pbw').style.display = 'block';
-    document.getElementById('pbl').style.display = 'block';
-    document.getElementById('sbtn').disabled = true;
+function runScan(target){
+  document.getElementById('em').style.display='none';
+  document.getElementById('res').style.display='none';
+  document.getElementById('pbw').style.display='block';
+  document.getElementById('pbl').style.display='block';
+  document.getElementById('sbtn').disabled=true;
+  const stages=[
+    [15,'Connecting to backend scanner engine...'],
+    [30,'Resolving hostname and initiating TLS handshake...'],
+    [50,'Extracting X.509 certificate chain and cipher suites...'],
+    [65,'Building Cryptographic Bill of Materials (CBOM)...'],
+    [80,'Running quantum risk scoring model...'],
+    [90,'Generating PQC migration recommendations...'],
+  ];
+  let i=0, done=false;
+  const ticker=setInterval(()=>{
+    if(done||i>=stages.length){clearInterval(ticker);return;}
+    document.getElementById('pbf').style.width=stages[i][0]+'%';
+    document.getElementById('pbl').textContent=stages[i][1];
+    i++;
+  },600);
+  const domain=target.replace(/^https?:\/\//,'').split('/')[0];
+  fetch(API_BASE+'/scan?domain='+encodeURIComponent(domain))
+    .then(r=>{if(!r.ok)return r.json().then(e=>{throw new Error(e.error||'Scan failed')});return r.json();})
+    .then(d=>{done=true;document.getElementById('pbf').style.width='100%';document.getElementById('pbl').textContent='Scan complete — rendering results...';setTimeout(()=>render(d),300);})
+    .catch(err=>{done=true;clearInterval(ticker);document.getElementById('pbw').style.display='none';document.getElementById('pbl').style.display='none';document.getElementById('sbtn').disabled=false;document.getElementById('em').style.display='block';document.getElementById('em').innerHTML='<span style="color:var(--red-text)">⚠ '+err.message+'</span>';});
+}
 
-    // Show real progress stages while backend works
-    const stages = [
-      [15, 'Connecting to backend scanner engine...'],
-      [30, 'Resolving hostname and initiating TLS handshake...'],
-      [50, 'Extracting X.509 certificate chain and cipher suites...'],
-      [65, 'Building Cryptographic Bill of Materials (CBOM)...'],
-      [80, 'Running quantum risk scoring model...'],
-      [90, 'Generating PQC migration recommendations...'],
-    ];
-    let i = 0, done = false;
-    const ticker = setInterval(() => {
-      if (done || i >= stages.length) { clearInterval(ticker); return; }
-      document.getElementById('pbf').style.width = stages[i][0] + '%';
-      document.getElementById('pbl').textContent = stages[i][1];
-      i++;
-    }, 600);
+document.getElementById('sbtn').addEventListener('click',function(){const v=document.getElementById('inp').value.trim();if(v)runScan(v);});
+document.getElementById('inp').addEventListener('keydown',function(e){if(e.key==='Enter'){const v=this.value.trim();if(v)runScan(v);}});
+document.querySelectorAll('.pbtn').forEach(function(btn){btn.addEventListener('click',function(){const t=btn.getAttribute('data-target');document.getElementById('inp').value=t;runScan(t);});});
 
-    // Call backend API
-    const domain = target.replace(/^https?:\/\//, '').split('/')[0];
-    fetch(API_BASE + '/scan?domain=' + encodeURIComponent(domain))
-      .then(r => {
-        if (!r.ok) return r.json().then(e => { throw new Error(e.error || 'Scan failed') });
-        return r.json();
-      })
-      .then(d => {
-        done = true;
-        document.getElementById('pbf').style.width = '100%';
-        document.getElementById('pbl').textContent = 'Scan complete — rendering results...';
-        setTimeout(() => render(d), 300);
-      })
-      .catch(err => {
-        done = true;
-        clearInterval(ticker);
-        document.getElementById('pbw').style.display = 'none';
-        document.getElementById('pbl').style.display = 'none';
-        document.getElementById('sbtn').disabled = false;
-        document.getElementById('em').style.display = 'block';
-        document.getElementById('em').innerHTML = '<span style="color:#C0392B">⚠ ' + err.message + '</span>';
-      });
-  }
+function render(d){
+  cur=d;crqcMode='arrived';
+  document.getElementById('pbw').style.display='none';
+  document.getElementById('pbl').style.display='none';
+  document.getElementById('sbtn').disabled=false;
 
-  document.getElementById('sbtn').addEventListener('click', function () {
-    const v = document.getElementById('inp').value.trim();
-    if (v) runScan(v);
-  });
-  document.querySelectorAll('.pbtn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      const t = btn.getAttribute('data-target');
-      document.getElementById('inp').value = t;
-      runScan(t);
-    });
-  });
+  const sc=d.score,lv=d.level;
+  const rc=lv==='HIGH'?'var(--red)':lv==='MEDIUM'?'var(--amber)':'var(--green)';
+  const bg=lv==='HIGH'?'var(--red-bg)':lv==='MEDIUM'?'var(--amber-bg)':'var(--green-bg)';
+  const tx=lv==='HIGH'?'var(--red-text)':lv==='MEDIUM'?'var(--amber-text)':'var(--green-text)';
+  const R=28,C=2*Math.PI*R,fill=(sc/100)*C;
+  const dotCls=lv==='HIGH'?'r':lv==='MEDIUM'?'a':'g';
 
-  function render(d) {
-    cur = d; crqcMode = 'arrived';
-    document.getElementById('pbw').style.display = 'none';
-    document.getElementById('pbl').style.display = 'none';
-    document.getElementById('sbtn').disabled = false;
+  const sfHtml=d.factors.map(f=>{
+    const bc=f.cat==='crit'?'var(--red-bg)':f.cat==='high'?'var(--amber-bg)':'var(--green-bg)';
+    const tc=f.cat==='crit'?'var(--red-text)':f.cat==='high'?'var(--amber-text)':'var(--green-text)';
+    const barW=f.pts===0?0:Math.min(100,Math.round((f.pts/45)*100));
+    const barC=f.cat==='crit'?'var(--red)':f.cat==='high'?'var(--amber)':'var(--green)';
+    return `<div class="srow"><div class="srow-f">${f.f}</div><div class="sbar-bg"><div class="sbar-fg" style="width:${barW}%;background:${barC}"></div></div><div class="simp" style="background:${bc};color:${tc}">${f.pts===0?'no impact':`+${f.pts} pts`}</div></div>`;
+  }).join('');
 
-    const sc = d.score, lv = d.level;
-    const rc = lv === 'HIGH' ? '#C0392B' : lv === 'MEDIUM' ? '#D68910' : '#1E8449';
-    const bg = lv === 'HIGH' ? '#FDECEA' : lv === 'MEDIUM' ? '#FFF3CD' : '#EAF3DE';
-    const tx = lv === 'HIGH' ? '#A32D2D' : lv === 'MEDIUM' ? '#854F0B' : '#3B6D11';
-    const R = 28, C = 2 * Math.PI * R, fill = (sc / 100) * C;
-    const dotCls = lv === 'HIGH' ? 'r' : lv === 'MEDIUM' ? 'a' : 'g';
-    const valCls = lv === 'HIGH' ? 'r' : lv === 'MEDIUM' ? 'a' : 'g';
+  const cbomHtml=[
+    ['Target',d.host+' ('+d.ip+')','b','active'],
+    ['TLS version',d.tls,d.tls==='TLS 1.3'?'g':'a',d.tls==='TLS 1.3'?'optimal':'upgrade needed'],
+    ['Cipher suite',`<span style="font-family:var(--mono);font-size:11px">${d.cipher}</span>`,'gr','—'],
+    ['Key exchange',d.kex,d.algos[0].shors?'r':'g',d.algos[0].shors?'quantum-weak':'PQC-safe'],
+    ['Auth / signature',d.auth,d.algos[1].shors?'r':'g',d.algos[1].shors?'quantum-weak':'PQC-safe'],
+    ['Encryption',d.enc,'g','quantum-adequate'],
+    ['MAC',d.mac,'g','quantum-adequate'],
+    ['Cert signature',d.sig,d.algos[1].shors?'r':'g',d.algos[1].shors?'quantum-weak':'PQC-safe'],
+    ['Public key bits',d.auth+' — '+d.keyBits+' bits','gr','assessed'],
+    ['Subject',d.subj,'gr','—'],
+    ['Issuer CA',d.issuer,'gr','—'],
+    ['Cert expiry',d.expiry,d.certOk?'g':'r',d.certOk?'valid':'expired'],
+  ].map(([el,val,bc,st])=>`<tr><td style="color:var(--text-muted);width:130px;font-size:12px;font-weight:500">${el}</td><td>${val}</td><td><span class="bx ${bc}">${st}</span></td></tr>`).join('');
 
-    // score factors
-    const sfHtml = d.factors.map(f => {
-      const bc = f.cat === 'crit' ? '#FDECEA' : f.cat === 'high' ? '#FFF3CD' : '#EAF3DE';
-      const tc = f.cat === 'crit' ? '#A32D2D' : f.cat === 'high' ? '#854F0B' : '#1E8449';
-      const barW = f.pts === 0 ? 0 : Math.min(100, Math.round((f.pts / 45) * 100));
-      const barC = f.cat === 'crit' ? '#C0392B' : f.cat === 'high' ? '#D68910' : '#1E8449';
-      return `<div class="srow">
-      <div class="srow-f">${f.f}</div>
-      <div class="sbar-bg"><div class="sbar-fg" style="width:${barW}%;background:${barC}"></div></div>
-      <div class="simp" style="background:${bc};color:${tc}">${f.pts === 0 ? 'no impact' : `+${f.pts} pts`}</div>
-    </div>`;
-    }).join('');
+  const priMap={CRITICAL:'crit',HIGH:'high',MEDIUM:'med',LOW:'low'};
+  const migHtml=d.mig.map(m=>`<tr><td><span class="pri ${priMap[m.pri]||'low'}">${m.pri}</span></td><td style="font-weight:500">${m.role}</td><td class="arrow-cell"><s>${m.from}</s><br><strong>→ ${m.to}</strong></td><td>${m.detail}</td><td><span class="bx gr">${m.standard}</span></td><td><span class="effort">${m.effort}</span></td></tr>`).join('');
 
-    // cbom
-    const cbomHtml = [
-      ['Target', d.host + ' (' + d.ip + ')', 'b', 'active'],
-      ['TLS version', d.tls, d.tls === 'TLS 1.3' ? 'g' : 'a', d.tls === 'TLS 1.3' ? 'optimal' : 'upgrade needed'],
-      ['Cipher suite', `<span style="font-family:var(--font-mono);font-size:11px">${d.cipher}</span>`, 'gr', '—'],
-      ['Key exchange', d.kex, d.algos[0].shors ? 'r' : 'g', d.algos[0].shors ? 'quantum-weak' : 'PQC-safe'],
-      ['Auth / signature', d.auth, d.algos[1].shors ? 'r' : 'g', d.algos[1].shors ? 'quantum-weak' : 'PQC-safe'],
-      ['Encryption', d.enc, 'g', 'quantum-adequate'],
-      ['MAC', d.mac, 'g', 'quantum-adequate'],
-      ['Cert signature', d.sig, d.algos[1].shors ? 'r' : 'g', d.algos[1].shors ? 'quantum-weak' : 'PQC-safe'],
-      ['Public key bits', d.auth + ' — ' + d.keyBits + ' bits', 'gr', 'assessed'],
-      ['Subject', d.subj, 'gr', '—'],
-      ['Issuer CA', d.issuer, 'gr', '—'],
-      ['Cert expiry', d.expiry, d.certOk ? 'g' : 'r', d.certOk ? 'valid' : 'expired'],
-    ].map(([el, val, bc, st]) => `<tr><td style="color:var(--color-text-secondary);width:120px;font-size:12px">${el}</td><td>${val}</td><td><span class="bx ${bc}">${st}</span></td></tr>`).join('');
+  const roadHtml=d.phases.map(p=>`<div class="rmap-card"><div class="rmap-phase" style="color:${p.color}">${p.label}</div><div class="rmap-items">${p.items.map(i=>'• '+i).join('<br>')}</div></div>`).join('');
 
-    // migration table
-    const priMap = { CRITICAL: 'crit', HIGH: 'high', MEDIUM: 'med', LOW: 'low' };
-    const migHtml = d.mig.map(m => `<tr>
-    <td><span class="pri ${priMap[m.pri] || 'low'}">${m.pri}</span></td>
-    <td style="font-weight:500">${m.role}</td>
-    <td class="arrow-cell"><s>${m.from}</s><br><strong>→ ${m.to}</strong></td>
-    <td>${m.detail}</td>
-    <td><span class="bx gr">${m.standard}</span></td>
-    <td><span class="effort">${m.effort}</span></td>
-  </tr>`).join('');
+  const lc=d.labelKey==='ready'?'g':d.labelKey==='partial'?'a':'r';
+  let lblHtml=`<span class="lbl ${lc}">${d.labelTxt}</span>`;
+  if(d.hndl) lblHtml+=`<span class="lbl r">HNDL Vulnerable</span>`;
+  if(d.tls==='TLS 1.3') lblHtml+=`<span class="lbl b">TLS 1.3 Deployed</span>`;
+  if(d.algos.some(a=>a.pqc)) lblHtml+=`<span class="lbl g">NIST PQC Present</span>`;
 
-    // roadmap
-    const roadHtml = d.phases.map(p => `<div class="rmap-card">
-    <div class="rmap-phase" style="color:${p.color}">${p.label}</div>
-    <div class="rmap-items">${p.items.map(i => '• ' + i).join('<br>')}</div>
-  </div>`).join('');
+  const hndlHtml=d.hndl?`<div class="hndl-bar"><b style="flex-shrink:0;margin-right:4px">HNDL alert —</b> Data encrypted with ${d.kex} can be harvested now and decrypted retroactively once a CRQC becomes available. Migrate key exchange immediately for data with &gt;5 year sensitivity.</div>`:'';
 
-    // labels
-    const lc = d.labelKey === 'ready' ? 'g' : d.labelKey === 'partial' ? 'a' : 'r';
-    let lblHtml = `<span class="lbl ${lc}">${d.labelTxt}</span>`;
-    if (d.hndl) lblHtml += `<span class="lbl r">HNDL Vulnerable</span>`;
-    if (d.tls === 'TLS 1.3') lblHtml += `<span class="lbl b">TLS 1.3 Deployed</span>`;
-    if (d.algos.some(a => a.pqc)) lblHtml += `<span class="lbl g">NIST PQC Present</span>`;
-
-    const hndlHtml = d.hndl ? `<div class="hndl-bar"><b style="flex-shrink:0;margin-right:4px">HNDL alert —</b> Data encrypted with ${d.kex} can be harvested now and decrypted retroactively once a CRQC becomes available. Migrate key exchange immediately for data with &gt;5 year sensitivity.</div>` : '';
-
-    document.getElementById('res').innerHTML = `
+  document.getElementById('res').innerHTML=`
   <div class="metrics">
     <div class="mc">
       <div class="mc-lbl">Quantum risk score</div>
       <div class="gauge-wrap">
         <div class="gauge">
-          <svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="${R}" fill="none" stroke="${bg}" stroke-width="8"/><circle cx="36" cy="36" r="${R}" fill="none" stroke="${rc}" stroke-width="8" stroke-dasharray="${fill} ${C}" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="${R}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="7"/><circle cx="36" cy="36" r="${R}" fill="none" stroke="${rc}" stroke-width="7" stroke-dasharray="${fill} ${C}" stroke-linecap="round"/></svg>
           <div class="gnum"><div class="gnum-n" style="color:${tx}">${sc}</div><div class="gnum-l">/100</div></div>
         </div>
-        <div><div style="font-size:15px;font-weight:500;color:${tx}">${lv}</div><div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">${d.labelTxt}</div></div>
+        <div><div style="font-size:15px;font-weight:600;color:${tx}">${lv}</div><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">${d.labelTxt}</div></div>
       </div>
     </div>
-    <div class="mc"><div class="mc-lbl">HNDL exposure</div><div class="mc-val ${d.hndl ? 'r' : 'g'}">${d.hndl ? 'YES' : 'NO'}</div><div class="mc-sub">${d.hndl ? 'active harvest risk' : 'no harvest risk'}</div></div>
-    <div class="mc"><div class="mc-lbl">Algorithms assessed</div><div class="mc-val">${d.algos.length}</div><div class="mc-sub">${d.algos.filter(a => a.shors).length} broken by Shor's</div></div>
-    <div class="mc"><div class="mc-lbl">NIST PQC deployed</div><div class="mc-val ${d.algos.some(a => a.pqc) ? 'g' : 'r'}">${d.algos.some(a => a.pqc) ? 'YES' : 'NO'}</div><div class="mc-sub">${d.algos.filter(a => a.pqc).length} of ${d.algos.length} algorithms</div></div>
-    <div class="mc"><div class="mc-lbl">TLS version</div><div class="mc-val ${d.tls === 'TLS 1.3' ? 'g' : 'a'}">${d.tls}</div><div class="mc-sub">${d.tls === 'TLS 1.3' ? 'optimal' : 'upgrade needed'}</div></div>
+    <div class="mc"><div class="mc-lbl">HNDL exposure</div><div class="mc-val ${d.hndl?'r':'g'}">${d.hndl?'YES':'NO'}</div><div class="mc-sub">${d.hndl?'active harvest risk':'no harvest risk'}</div></div>
+    <div class="mc"><div class="mc-lbl">Algorithms assessed</div><div class="mc-val">${d.algos.length}</div><div class="mc-sub">${d.algos.filter(a=>a.shors).length} broken by Shor's</div></div>
+    <div class="mc"><div class="mc-lbl">NIST PQC deployed</div><div class="mc-val ${d.algos.some(a=>a.pqc)?'g':'r'}">${d.algos.some(a=>a.pqc)?'YES':'NO'}</div><div class="mc-sub">${d.algos.filter(a=>a.pqc).length} of ${d.algos.length} algorithms</div></div>
+    <div class="mc"><div class="mc-lbl">TLS version</div><div class="mc-val ${d.tls==='TLS 1.3'?'g':'a'}">${d.tls}</div><div class="mc-sub">${d.tls==='TLS 1.3'?'optimal':'upgrade needed'}</div></div>
   </div>
 
   ${hndlHtml}
@@ -941,9 +348,9 @@
   <div class="card">
     <div class="ctitle"><span class="dot ${dotCls}"></span>Risk score breakdown — weighted 8-factor model</div>
     ${sfHtml}
-    <div style="margin-top:.75rem;padding:.6rem .85rem;background:${bg};border-radius:var(--border-radius-md);display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:13px;font-weight:500;color:${tx}">Total quantum risk score</span>
-      <span style="font-size:17px;font-weight:500;color:${tx}">${sc} / 100 — ${lv}</span>
+    <div style="margin-top:.85rem;padding:.7rem 1rem;background:${bg};border-radius:var(--radius-sm);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;font-weight:600;color:${tx}">Total quantum risk score</span>
+      <span style="font-size:17px;font-weight:700;color:${tx}">${sc} / 100 — ${lv}</span>
     </div>
   </div>
 
@@ -955,12 +362,12 @@
 
   <div class="card" id="crqc-card">
     <div class="ctitle"><span class="dot p"></span>CRQC attack simulation — Shor's &amp; Grover's algorithm models</div>
-    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:.85rem">Select threat scenario to simulate what a Cryptographically Relevant Quantum Computer would break on this asset</div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:1rem">Select threat scenario to simulate what a Cryptographically Relevant Quantum Computer would break on this asset</div>
     <div class="tline">
       <div class="tnode"><div class="tcirc done">1</div><div class="tlbl">Classical<br>threats<br>(today)</div></div>
       <div class="tnode"><div class="tcirc warn">2</div><div class="tlbl">CRQC<br>imminent<br>~2030</div></div>
       <div class="tnode"><div class="tcirc done">3</div><div class="tlbl">CRQC<br>arrives<br>(full power)</div></div>
-      <div class="tnode"><div class="tcirc ${d.labelKey === 'ready' ? 'ok' : 'dim'}">4</div><div class="tlbl">Post-CRQC<br>world<br>(PQC era)</div></div>
+      <div class="tnode"><div class="tcirc ${d.labelKey==='ready'?'ok':'dim'}">4</div><div class="tlbl">Post-CRQC<br>world<br>(PQC era)</div></div>
     </div>
     <div class="ctabs">
       <button class="ctab on" id="ct-arrived" onclick="setCRQC('arrived')">CRQC arrived (now)</button>
@@ -973,86 +380,62 @@
   <div class="card">
     <div class="ctitle"><span class="dot g"></span>Migration recommendations — full PQC transition plan</div>
     <div class="mig-summary">
-      <span class="bx r">${d.mig.filter(m => m.pri === 'CRITICAL').length} critical</span>
-      <span class="bx a">${d.mig.filter(m => m.pri === 'HIGH').length} high priority</span>
-      <span class="bx b">${d.mig.filter(m => m.pri === 'MEDIUM').length} medium</span>
-      <span class="bx gr">${d.mig.filter(m => m.pri === 'LOW').length} low / maintenance</span>
+      <span class="bx r">${d.mig.filter(m=>m.pri==='CRITICAL').length} critical</span>
+      <span class="bx a">${d.mig.filter(m=>m.pri==='HIGH').length} high priority</span>
+      <span class="bx b">${d.mig.filter(m=>m.pri==='MEDIUM').length} medium</span>
+      <span class="bx gr">${d.mig.filter(m=>m.pri==='LOW').length} low / maintenance</span>
     </div>
     <table class="mig-table">
       <thead><tr><th>Priority</th><th>Area</th><th>Migration path</th><th>Detail</th><th>Standard</th><th>Effort</th></tr></thead>
       <tbody>${migHtml}</tbody>
     </table>
-    <div style="margin-top:1rem">
-      <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.04em">Migration roadmap</div>
+    <div style="margin-top:1.25rem">
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.06em">Migration roadmap</div>
       <div class="roadmap">${roadHtml}</div>
     </div>
   </div>
 
-
   ${d.scan_evidence ? `<div class="card">
     <div class="ctitle"><span class="dot b"></span>Scan Evidence</div>
-    <div style="font-size:12.5px;color:var(--color-text-primary);line-height:2">
-      ${d.scan_evidence.steps.map(s=>'<div style="display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="color:#1E8449;font-weight:700">✓</span> '+s+'</div>').join('')}
-      <div style="margin-top:.6rem;padding:.6rem .85rem;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:12px;color:var(--color-text-secondary);display:flex;gap:1.5rem;flex-wrap:wrap">
-        <span><strong>Scan timestamp:</strong> ${d.scan_evidence.scan_timestamp}</span>
-        <span><strong>Scan duration:</strong> ${d.scan_evidence.scan_duration}</span>
-        <span><strong>Engine:</strong> ${d.scan_evidence.scanner_engine}</span>
+    <div style="font-size:13px;color:var(--text-primary);line-height:2.2">
+      ${d.scan_evidence.steps.map(s=>'<div style="display:flex;align-items:center;gap:10px;padding:4px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green-text);font-weight:700">✓</span> '+s+'</div>').join('')}
+      <div style="margin-top:.75rem;padding:.75rem 1rem;background:var(--bg-elevated);border-radius:var(--radius-sm);font-size:12px;color:var(--text-secondary);display:flex;gap:2rem;flex-wrap:wrap">
+        <span><strong style="color:var(--text-primary)">Scan timestamp:</strong> ${d.scan_evidence.scan_timestamp}</span>
+        <span><strong style="color:var(--text-primary)">Scan duration:</strong> ${d.scan_evidence.scan_duration}</span>
+        <span><strong style="color:var(--text-primary)">Engine:</strong> ${d.scan_evidence.scanner_engine}</span>
       </div>
     </div>
   </div>` : ''}
   `;
-    document.getElementById('res').style.display = 'block';
-  }
+  document.getElementById('res').style.display='block';
+}
 
-  function buildCRQC(d) {
-    let brk = 0, wk = 0, safe = 0;
-    const algoHtml = d.algos.map(a => {
-      let isBroken, isWeak, note;
-      if (crqcMode === 'classical') {
-        isBroken = false; isWeak = false; note = 'Classically secure — no known polynomial-time classical attack';
-      } else if (crqcMode === 'imminent') {
-        isBroken = a.shors; isWeak = a.grovers && !a.shors;
-        note = isBroken ? '[2030 est.] ' + a.note : isWeak ? '[Grover] ' + a.note : 'Quantum-safe in 2030 threat model';
-      } else {
-        isBroken = a.shors; isWeak = a.grovers && !a.shors; note = a.note;
-      }
-      if (isBroken) brk++; else if (isWeak) wk++; else safe++;
-      const cls = isBroken ? 'broken' : isWeak ? 'weak' : 'safe';
-      const icon = isBroken ? '✕' : isWeak ? '≈' : '✓';
-      return `<div class="arow">
-      <div class="aicon ${cls}">${icon}</div>
-      <div style="flex:1">
-        <div class="aname">${a.n} <span class="bx ${a.pqc ? 'g' : 'gr'}" style="font-size:10px">${a.pqc ? 'NIST PQC' : a.role}</span></div>
-        <div class="anote">${note}</div>
-      </div>
-    </div>`;
-    });
-    const left = algoHtml.slice(0, 3).join(''), right = algoHtml.slice(3).join('');
-    let verdict, vc;
-    if (crqcMode === 'classical') {
-      verdict = 'Classical threat model: all algorithms are secure against known classical attacks. No immediate quantum-specific action, but the HNDL window is open — recorded sessions are vulnerable once a CRQC arrives.'; vc = 'safe';
-    } else if (brk === 0 && wk === 0) {
-      verdict = 'Fully quantum-resilient under this threat model. No algorithms broken or weakened. NIST PQC standards satisfied.'; vc = 'safe';
-    } else if (brk === 0) {
-      verdict = `No algorithms broken outright, but ${wk} algorithm(s) weakened by Grover's — effective key lengths are halved. Migrate before CRQC deployment for long-lived sensitive data.`; vc = 'partial';
-    } else {
-      const when = crqcMode === 'imminent' ? 'By ~2030' : 'Upon CRQC arrival';
-      verdict = `<strong>${when}, Shor's algorithm breaks ${brk} algorithm(s).</strong> All sessions protected by the current key exchange are retroactively decryptable (HNDL).${wk > 0 ? ' ' + wk + ' further algorithm(s) weakened by Grover\'s.' : ''} Immediate migration to ML-KEM / ML-DSA required.`; vc = 'threat';
-    }
-    return `<div style="display:flex;gap:8px;margin-bottom:.85rem;flex-wrap:wrap">
-    <span class="bx r">${brk} broken by Shor's</span>
-    <span class="bx a">${wk} weakened by Grover's</span>
-    <span class="bx g">${safe} quantum-safe</span>
-  </div>
-  <div class="crqc-grid"><div>${left}</div><div>${right}</div></div>
-  <div class="crqc-verdict ${vc}">${verdict}</div>`;
-  }
+function buildCRQC(d){
+  let brk=0,wk=0,safe=0;
+  const algoHtml=d.algos.map(a=>{
+    let isBroken,isWeak,note;
+    if(crqcMode==='classical'){isBroken=false;isWeak=false;note='Classically secure — no known polynomial-time classical attack';}
+    else if(crqcMode==='imminent'){isBroken=a.shors;isWeak=a.grovers&&!a.shors;note=isBroken?'[2030 est.] '+a.note:isWeak?'[Grover] '+a.note:'Quantum-safe in 2030 threat model';}
+    else{isBroken=a.shors;isWeak=a.grovers&&!a.shors;note=a.note;}
+    if(isBroken)brk++;else if(isWeak)wk++;else safe++;
+    const cls=isBroken?'broken':isWeak?'weak':'safe';
+    const icon=isBroken?'✕':isWeak?'≈':'✓';
+    return `<div class="arow"><div class="aicon ${cls}">${icon}</div><div style="flex:1"><div class="aname">${a.n} <span class="bx ${a.pqc?'g':'gr'}" style="font-size:10px">${a.pqc?'NIST PQC':a.role}</span></div><div class="anote">${note}</div></div></div>`;
+  });
+  const left=algoHtml.slice(0,3).join(''),right=algoHtml.slice(3).join('');
+  let verdict,vc;
+  if(crqcMode==='classical'){verdict='Classical threat model: all algorithms are secure against known classical attacks. No immediate quantum-specific action, but the HNDL window is open — recorded sessions are vulnerable once a CRQC arrives.';vc='safe';}
+  else if(brk===0&&wk===0){verdict='Fully quantum-resilient under this threat model. No algorithms broken or weakened. NIST PQC standards satisfied.';vc='safe';}
+  else if(brk===0){verdict=`No algorithms broken outright, but ${wk} algorithm(s) weakened by Grover's — effective key lengths are halved. Migrate before CRQC deployment for long-lived sensitive data.`;vc='partial';}
+  else{const when=crqcMode==='imminent'?'By ~2030':'Upon CRQC arrival';verdict=`<strong>${when}, Shor's algorithm breaks ${brk} algorithm(s).</strong> All sessions protected by the current key exchange are retroactively decryptable (HNDL).${wk>0?' '+wk+' further algorithm(s) weakened by Grover\'s.':''} Immediate migration to ML-KEM / ML-DSA required.`;vc='threat';}
+  return `<div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap"><span class="bx r">${brk} broken by Shor's</span><span class="bx a">${wk} weakened by Grover's</span><span class="bx g">${safe} quantum-safe</span></div><div class="crqc-grid"><div>${left}</div><div>${right}</div></div><div class="crqc-verdict ${vc}">${verdict}</div>`;
+}
 
-  function setCRQC(m) {
-    crqcMode = m;
-    ['arrived', 'imminent', 'classical'].forEach(function (x) {
-      document.getElementById('ct-' + x).className = 'ctab' + (x === m ? ' on' : '');
-    });
-    if (cur) document.getElementById('crqc-body').innerHTML = buildCRQC(cur);
-  }
+function setCRQC(m){
+  crqcMode=m;
+  ['arrived','imminent','classical'].forEach(function(x){document.getElementById('ct-'+x).className='ctab'+(x===m?' on':'');});
+  if(cur)document.getElementById('crqc-body').innerHTML=buildCRQC(cur);
+}
 </script>
+</body>
+</html>
